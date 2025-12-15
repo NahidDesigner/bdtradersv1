@@ -11,10 +11,11 @@ ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_BASE_DOMAIN=$VITE_BASE_DOMAIN
 
 # Copy package files
-COPY package*.json ./
+COPY package.json ./
 
 # Install dependencies
-RUN npm ci
+# Using npm install instead of npm ci since package-lock.json may not exist
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
