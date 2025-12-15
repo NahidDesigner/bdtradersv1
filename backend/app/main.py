@@ -20,17 +20,32 @@ async def lifespan(app: FastAPI):
     logger.info(f"Connecting to database at: ***@{db_url_safe}")
     logger.info(f"Database user: {settings.POSTGRES_USER}, host: {settings.POSTGRES_HOST}, port: {settings.POSTGRES_PORT}, db: {settings.POSTGRES_DB}")
     
-    try:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        logger.info("Database connection successful! Tables created/verified.")
-    except Exception as e:
-        logger.error(f"Database connection failed: {str(e)}")
-        logger.error("Please check:")
-        logger.error("1. POSTGRES_PASSWORD in backend service matches postgres service")
-        logger.error("2. If database already exists, password must match the original password")
-        logger.error("3. Or delete postgres volume and recreate with new password")
-        raise
+    # Retry connection with exponential backoff
+    import asyncio
+    max_retries = 10
+    retry_delay = 2
+    
+    for attempt in range(max_retries):
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            logger.info("Database connection successful! Tables created/verified.")
+            break
+        except Exception as e:
+            if attempt < max_retries - 1:
+                logger.warning(f"Database connection attempt {attempt + 1}/{max_retries} failed: {str(e)}")
+                logger.info(f"Retrying in {retry_delay} seconds...")
+                await asyncio.sleep(retry_delay)
+                retry_delay = min(retry_delay * 1.5, 10)  # Exponential backoff, max 10s
+            else:
+                logger.error(f"Database connection failed after {max_retries} attempts: {str(e)}")
+                logger.error("Please check:")
+                logger.error("1. POSTGRES_HOST is set to 'postgres' (service name)")
+                logger.error("2. POSTGRES_PASSWORD in backend service matches postgres service")
+                logger.error("3. Postgres service is running and healthy")
+                logger.error("4. If database already exists, password must match the original password")
+                raise
+    
     yield
     # Shutdown: Cleanup if needed
     pass

@@ -63,6 +63,10 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+# Ensure POSTGRES_HOST defaults to "postgres" if empty (Docker service name)
+if not settings.POSTGRES_HOST or not settings.POSTGRES_HOST.strip():
+    settings.POSTGRES_HOST = "postgres"
+
 # Convert string values to proper types
 settings.POSTGRES_PORT = int(settings.POSTGRES_PORT) if settings.POSTGRES_PORT and settings.POSTGRES_PORT.strip() else 5432
 settings.JWT_EXPIRATION_HOURS = int(settings.JWT_EXPIRATION_HOURS) if settings.JWT_EXPIRATION_HOURS and settings.JWT_EXPIRATION_HOURS.strip() else 24
