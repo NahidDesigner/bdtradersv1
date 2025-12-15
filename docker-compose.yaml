@@ -9,9 +9,9 @@ services:
     image: postgres:15-alpine
     container_name: bd_tenant_db
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-bdtenant}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -28,7 +28,11 @@ services:
     container_name: bd_tenant_backend
     environment:
       # Database - Coolify can provide DATABASE_URL directly
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-bdtenant}}
+      # If DATABASE_URL is not set, it will be constructed from individual variables
+      DATABASE_URL: ${DATABASE_URL}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-bdtenant}
       # Security
       SECRET_KEY: ${SECRET_KEY}
       JWT_SECRET: ${JWT_SECRET}

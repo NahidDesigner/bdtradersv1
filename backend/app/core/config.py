@@ -4,8 +4,13 @@ import os
 
 
 class Settings(BaseSettings):
-    # Database
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/bdtenant"
+    # Database - can be full URL or constructed from parts
+    DATABASE_URL: str = ""
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_DB: str = "bdtenant"
+    POSTGRES_HOST: str = "postgres"
+    POSTGRES_PORT: int = 5432
     
     # Security
     SECRET_KEY: str = "your-secret-key-change-in-production"
@@ -55,6 +60,10 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Construct DATABASE_URL if not provided
+if not settings.DATABASE_URL:
+    settings.DATABASE_URL = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
 
 # Process CORS_ORIGINS - handle both string and list formats
 if isinstance(settings.CORS_ORIGINS, str):
