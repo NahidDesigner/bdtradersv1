@@ -17,7 +17,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "your-secret-key-change-in-production"
     JWT_SECRET: str = "your-jwt-secret-change-in-production"
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRATION_HOURS: int = 24
+    # JWT_EXPIRATION_HOURS can be empty string, handle it
+    JWT_EXPIRATION_HOURS: str = "24"
     
     # CORS - Can be comma-separated string or list
     CORS_ORIGINS: Union[str, List[str]] = "http://localhost:5173,http://localhost:3000"
@@ -28,7 +29,7 @@ class Settings(BaseSettings):
     
     # SMTP
     SMTP_HOST: str = ""
-    SMTP_PORT: int = 587
+    SMTP_PORT: str = "587"  # Handle as string, convert later
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = "noreply@bdtenant.com"
