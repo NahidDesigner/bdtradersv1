@@ -1,5 +1,9 @@
 version: '3.8'
 
+# BD Tenant SaaS Platform - Docker Compose Configuration
+# This file is used by Coolify for deployment
+# Make sure Coolify is configured to use "Docker Compose" mode, not "Dockerfile"
+
 services:
   postgres:
     image: postgres:15-alpine
