@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     # Database - can be full URL or constructed from parts
     DATABASE_URL: str = ""
     POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_PASSWORD: str = "bdtenant2024secure"  # Default password - change in production!
     POSTGRES_DB: str = "bdtenant"
     POSTGRES_HOST: str = "postgres"
     # POSTGRES_PORT can be empty string from env, so we handle it specially
