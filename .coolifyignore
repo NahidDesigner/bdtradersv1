@@ -1,0 +1,18 @@
+# Files to ignore in Coolify
+.git
+.gitignore
+*.md
+!README.md
+.env
+.env.*
+node_modules
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.coverage
+htmlcov
+.DS_Store
+.vscode
+.idea
+

@@ -1,0 +1,27 @@
+# Coolify configuration file
+# This file helps Coolify understand your application structure
+
+version: '3.8'
+
+# Coolify will automatically detect docker-compose.yml
+# You can also specify custom build contexts here if needed
+
+services:
+  backend:
+    # Coolify will automatically expose this service
+    # Make sure health check endpoint is available at /health
+    labels:
+      - "coolify.managed=true"
+    
+  frontend:
+    # Coolify will automatically expose this service
+    # Frontend is built as static files served by nginx
+    labels:
+      - "coolify.managed=true"
+
+  postgres:
+    # Coolify can manage this database or you can use external database
+    # If using Coolify's database service, remove this and use DATABASE_URL from Coolify
+    labels:
+      - "coolify.managed=true"
+
