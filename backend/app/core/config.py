@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "bdtenant"
     POSTGRES_HOST: str = "postgres"
-    POSTGRES_PORT: int = 5432
+    # POSTGRES_PORT can be empty string from env, so we handle it specially
+    POSTGRES_PORT: str = "5432"
     
     # Security
     SECRET_KEY: str = "your-secret-key-change-in-production"
@@ -47,12 +48,12 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     
     # File Upload
-    MAX_UPLOAD_SIZE: int = 10485760  # 10MB
+    MAX_UPLOAD_SIZE: str = "10485760"  # 10MB - handle as string, convert later
     UPLOAD_DIR: str = "uploads"
     
     # Environment
     ENVIRONMENT: str = "development"
-    DEBUG: bool = True
+    DEBUG: str = "false"  # Handle as string, convert to bool later
     
     class Config:
         env_file = ".env"
@@ -60,6 +61,13 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Convert string values to proper types
+settings.POSTGRES_PORT = int(settings.POSTGRES_PORT) if settings.POSTGRES_PORT and settings.POSTGRES_PORT.strip() else 5432
+settings.JWT_EXPIRATION_HOURS = int(settings.JWT_EXPIRATION_HOURS) if settings.JWT_EXPIRATION_HOURS and settings.JWT_EXPIRATION_HOURS.strip() else 24
+settings.MAX_UPLOAD_SIZE = int(settings.MAX_UPLOAD_SIZE) if settings.MAX_UPLOAD_SIZE and settings.MAX_UPLOAD_SIZE.strip() else 10485760
+settings.DEBUG = settings.DEBUG.lower() in ("true", "1", "yes") if isinstance(settings.DEBUG, str) else bool(settings.DEBUG)
+settings.SMTP_PORT = int(settings.SMTP_PORT) if settings.SMTP_PORT and str(settings.SMTP_PORT).strip() else 587
 
 # Construct DATABASE_URL if not provided
 if not settings.DATABASE_URL:
