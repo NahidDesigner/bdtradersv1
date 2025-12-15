@@ -5,10 +5,10 @@ from decimal import Decimal
 
 class TenantCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
-    slug: str = Field(..., min_length=1, max_length=100, regex="^[a-z0-9-]+$")
-    brand_color: Optional[str] = Field(default="#3B82F6", regex="^#[0-9A-Fa-f]{6}$")
+    slug: str = Field(..., min_length=1, max_length=100, pattern="^[a-z0-9-]+$")
+    brand_color: Optional[str] = Field(default="#3B82F6", pattern="^#[0-9A-Fa-f]{6}$")
     currency: str = Field(default="BDT", max_length=3)
-    default_language: str = Field(default="bn", regex="^(bn|en)$")
+    default_language: str = Field(default="bn", pattern="^(bn|en)$")
     
     @validator("slug")
     def validate_slug(cls, v):
