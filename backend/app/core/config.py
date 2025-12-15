@@ -71,4 +71,3 @@ if isinstance(settings.CORS_ORIGINS, str):
         settings.CORS_ORIGINS = ["*"]
     else:
         settings.CORS_ORIGINS = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]
-
