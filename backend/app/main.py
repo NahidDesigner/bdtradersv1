@@ -2,18 +2,35 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from contextlib import asynccontextmanager
+import logging
 
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.middleware.tenant import TenantMiddleware
 from app.api.v1 import api_router
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Create tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Log connection info (without password) for debugging
+    db_url_safe = settings.DATABASE_URL.split("@")[-1] if "@" in settings.DATABASE_URL else "***"
+    logger.info(f"Connecting to database at: ***@{db_url_safe}")
+    logger.info(f"Database user: {settings.POSTGRES_USER}, host: {settings.POSTGRES_HOST}, port: {settings.POSTGRES_PORT}, db: {settings.POSTGRES_DB}")
+    
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database connection successful! Tables created/verified.")
+    except Exception as e:
+        logger.error(f"Database connection failed: {str(e)}")
+        logger.error("Please check:")
+        logger.error("1. POSTGRES_PASSWORD in backend service matches postgres service")
+        logger.error("2. If database already exists, password must match the original password")
+        logger.error("3. Or delete postgres volume and recreate with new password")
+        raise
     yield
     # Shutdown: Cleanup if needed
     pass
