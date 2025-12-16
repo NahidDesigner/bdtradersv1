@@ -1,151 +1,170 @@
-# 🔧 Fix: Frontend Not Serving - Requests Going to Backend
+# 🎯 Fix "No Available Server" - Frontend Routing
 
-## 🔍 The Problem
+## ✅ Good News: DNS and SSL Work!
 
-Your backend logs show:
+**"No available server" means:**
+- ✅ DNS resolves correctly
+- ✅ SSL certificate works
+- ❌ Coolify isn't routing the domain to your frontend service
+
+## 🔧 Fix Coolify Frontend Routing
+
+### Step 1: Verify Domain Assignment
+
+**Go to: Coolify → Your Project → Configuration → General → Domains**
+
+**Check "Domains for frontend":**
+- Should show: `bdtraders.vibecodingfield.com`
+- If empty or wrong:
+  1. Type: `bdtraders.vibecodingfield.com`
+  2. Click "Save" button
+  3. Refresh page and verify it's saved
+
+**Check "Domains for backend":**
+- Should show: `api.bdtraders.vibecodingfield.com`
+- If empty or wrong:
+  1. Type: `api.bdtraders.vibecodingfield.com`
+  2. Click "Save" button
+  3. Refresh page and verify it's saved
+
+### Step 2: Check Frontend Service Configuration
+
+**Go to: Coolify → Your Project**
+
+**Look for services:**
+- Do you see "frontend" as a separate service?
+- Or is everything under one "application"?
+
+**If you see "frontend" service separately:**
+
+1. **Click on "frontend" service**
+2. **Go to: Configuration → Domains** (or General)
+3. **Check if domain is set:**
+   - Should show: `bdtraders.vibecodingfield.com`
+4. **If not set:**
+   - Add: `bdtraders.vibecodingfield.com`
+   - Save
+
+### Step 3: Check Frontend Environment Variables
+
+**Go to: Coolify → Your Project → Configuration → Environment Variables**
+
+**For Frontend Service, verify:**
+
 ```
-INFO: 10.0.3.2:48370 - "GET / HTTP/1.1" 404 Not Found
+VITE_API_URL=https://api.bdtraders.vibecodingfield.com
+VITE_BASE_DOMAIN=bdtraders.vibecodingfield.com
 ```
 
-This means requests to the root domain (`/`) are going to the **backend** instead of the **frontend**. The frontend container is running (nginx logs show it started), but Coolify is routing requests incorrectly.
+**If missing or wrong:**
+1. Add/Update `VITE_API_URL` = `https://api.bdtraders.vibecodingfield.com`
+2. Add/Update `VITE_BASE_DOMAIN` = `bdtraders.vibecodingfield.com`
+3. Check: "Available at Buildtime" ✅
+4. Check: "Available at Runtime" ✅
+5. Click "Update"
 
-## ✅ Solution: Fix Domain Configuration in Coolify
+**⚠️ IMPORTANT:** After changing `VITE_API_URL`, you MUST rebuild frontend!
 
-### Step 1: Check Current Domain Setup
+### Step 4: Rebuild Frontend
 
-In Coolify → **Configuration → General → Domains**:
+**After setting `VITE_API_URL`:**
 
-**Backend Domain:**
-- Should be: `https://bdtraders.vibecodingfield.com/api`
-- This routes `/api/*` to the backend
+1. **Go to: Coolify → Your Project**
+2. **Click: "Redeploy"** (orange button, top right)
+3. **Wait: 3-5 minutes** for rebuild
+4. **Check: All services show "healthy"**
 
-**Frontend Domain:**
-- Should be: `https://bdtraders.vibecodingfield.com/`
-- This should route `/` to the frontend
+### Step 5: Check Coolify Links
 
-### Step 2: Verify Frontend Service is Running
+**Go to: Coolify → Your Project → Links**
 
-1. Go to **Logs** tab in Coolify
-2. Check if **frontend** service shows nginx running
-3. Look for any frontend errors
+**You should see:**
+- `https://bdtraders.vibecodingfield.com` → Frontend link
 
-### Step 3: Check Service Ports
+**Click the link:**
+- ✅ Should show your React app
+- ❌ If redirects to Coolify dashboard = Domain not assigned correctly
 
-In Docker Compose:
-- **Backend** runs on port `8000`
-- **Frontend** runs on port `80`
+### Step 6: Verify Service Health
 
-Coolify should automatically route:
-- `/api/*` → Backend (port 8000)
-- `/*` → Frontend (port 80)
+**Go to: Coolify → Your Project → Logs**
 
-### Step 4: Fix Domain Configuration
+**Check frontend service:**
+- Should show: "nginx/1.29.4" running
+- Should show: "healthy" status
+- No errors
 
-**Option A: Separate Subdomains (Recommended)**
+**If frontend is unhealthy:**
+- Check logs for errors
+- Fix errors
+- Redeploy
 
-1. **Backend Domain:**
-   ```
-   https://api.bdtraders.vibecodingfield.com
-   ```
+### Step 7: Redeploy After All Changes
 
-2. **Frontend Domain:**
-   ```
-   https://bdtraders.vibecodingfield.com
-   ```
+**After making any changes:**
 
-3. **Update Environment Variables:**
-   ```
-   VITE_API_URL = https://api.bdtraders.vibecodingfield.com
-   VITE_BASE_DOMAIN = bdtraders.vibecodingfield.com
-   ```
+1. **Go to: Coolify → Your Project**
+2. **Click: "Redeploy"**
+3. **Wait: 2-3 minutes**
+4. **Test: `https://bdtraders.vibecodingfield.com`**
 
-**Option B: Same Domain with Path (Current Setup)**
+## 🎯 Expected Result
 
-If you want to keep `/api` for backend:
+**After fixing routing:**
 
-1. **Backend Domain:**
-   ```
-   https://bdtraders.vibecodingfield.com/api
-   ```
+1. **Frontend:** `https://bdtraders.vibecodingfield.com`
+   - Should show your React app
+   - Should NOT show "no available server"
 
-2. **Frontend Domain:**
-   ```
-   https://bdtraders.vibecodingfield.com
-   ```
-   (NOT `/` - just the domain without path)
+2. **Backend:** `https://api.bdtraders.vibecodingfield.com`
+   - Should show JSON: `{"message": "BD Tenant SaaS Platform API", ...}`
 
-3. **Make sure Coolify routes:**
-   - `/api/*` → Backend service
-   - `/*` → Frontend service
+## 🚨 Common Issues
 
-### Step 5: Verify Frontend Container
+### Issue 1: Domain Not Saved
 
-Check if frontend container is actually running:
+**Fix:**
+- Make sure you click "Save" after typing domain
+- Refresh page and verify domain is still there
+- Some Coolify versions require clicking "Update" instead
 
-1. In Coolify → **Logs** → Select **frontend** service
-2. Should see nginx logs
-3. Try accessing frontend health: `https://bdtraders.vibecodingfield.com/health`
-   - Should return: `healthy`
+### Issue 2: Frontend Not Rebuilt
 
-### Step 6: Rebuild if Needed
+**Fix:**
+- After changing `VITE_API_URL`, you MUST rebuild
+- Click "Redeploy" in Coolify
+- Wait for rebuild to complete
 
-If frontend wasn't built with correct `VITE_API_URL`:
+### Issue 3: Domain Format Wrong
 
-1. Set environment variables:
-   ```
-   VITE_API_URL = https://bdtraders.vibecodingfield.com/api
-   VITE_BASE_DOMAIN = bdtraders.vibecodingfield.com
-   ```
-   (Check "Available at Buildtime")
+**Fix:**
+- Use: `bdtraders.vibecodingfield.com`
+- NOT: `https://bdtraders.vibecodingfield.com` (no https://)
+- NOT: `bdtraders` (must include full domain)
 
-2. **Redeploy** to rebuild frontend
+### Issue 4: Service Not Found
 
-## 🔍 Debugging Steps
+**Fix:**
+- Check if Coolify detected your services correctly
+- Check docker-compose.yaml is correct
+- Redeploy to refresh service detection
 
-### Test 1: Check Frontend Health
-```
-https://bdtraders.vibecodingfield.com/health
-```
-- ✅ Should return: `healthy`
-- ❌ If "no available server" → Frontend container not running
+## 📸 What to Send Me
 
-### Test 2: Check Backend Health
-```
-https://bdtraders.vibecodingfield.com/api/health
-```
-- ✅ Should return: `{"status":"healthy","service":"bd-tenant-backend"}`
-- ✅ This is already working!
+**If still not working, send:**
 
-### Test 3: Check Root Path
-```
-https://bdtraders.vibecodingfield.com/
-```
-- ✅ Should show: Login page (React app)
-- ❌ If 404 or "no available server" → Routing issue
+1. **Screenshot of: Coolify → Configuration → General → Domains**
+   - Show what domains are set
 
-## 🎯 Most Likely Issue
+2. **Screenshot of: Coolify → Links**
+   - Show what links are available
 
-Coolify is routing `/` to the backend instead of the frontend. This happens when:
+3. **Screenshot of: Frontend service logs**
+   - Show if frontend is running
 
-1. **Frontend domain not properly configured** - Make sure frontend domain is set to the root domain (without `/api`)
-2. **Frontend container not exposed** - Check if frontend service is properly configured in Coolify
-3. **Routing priority** - Coolify might be routing `/` to backend before frontend
+4. **What happens when you click frontend link:**
+   - Redirects to Coolify?
+   - Shows "no available server"?
+   - Shows your app?
 
-## ✅ Quick Fix Checklist
-
-- [ ] Frontend domain is set to: `https://bdtraders.vibecodingfield.com` (no path)
-- [ ] Backend domain is set to: `https://bdtraders.vibecodingfield.com/api`
-- [ ] Frontend container is running (check logs)
-- [ ] Frontend health check works: `/health` returns "healthy"
-- [ ] `VITE_API_URL` is set correctly
-- [ ] Frontend was rebuilt after setting `VITE_API_URL`
-
-## 🚀 After Fixing
-
-1. Visit `https://bdtraders.vibecodingfield.com/`
-2. Should see the login page
-3. Can navigate to `/auth/login`
-4. Can register/login
-
-The backend is working perfectly - we just need to fix the frontend routing!
-
+**This will help identify the exact routing issue!**
