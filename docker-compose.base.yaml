@@ -1,0 +1,93 @@
+version: '3.8'
+
+# BD Tenant SaaS Platform - Base Version
+# Minimal, clean, optimized for Docker containers
+# Auto-configuration - no manual environment variables needed!
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: bd_tenant_db_base
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bdtenant}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bdtenant2024secure}
+    volumes:
+      - postgres_data_base:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - bd_tenant_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.base
+    container_name: bd_tenant_backend_base
+    environment:
+      # Database - Auto-configured
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bdtenant2024secure}
+      POSTGRES_DB: ${POSTGRES_DB:-bdtenant}
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      # Security - Auto-generated defaults
+      SECRET_KEY: ${SECRET_KEY:-bdtenant-secret-key-change-in-production-2024}
+      JWT_SECRET: ${JWT_SECRET:-bdtenant-jwt-secret-change-in-production-2024}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
+      # CORS - Allow all by default
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      # Domain
+      BASE_DOMAIN: ${BASE_DOMAIN:-localhost}
+      ALLOWED_SUBDOMAINS: ${ALLOWED_SUBDOMAINS:-*}
+      # Environment
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      DEBUG: ${DEBUG:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backend_uploads_base:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - bd_tenant_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.base
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+        VITE_BASE_DOMAIN: ${VITE_BASE_DOMAIN:-localhost}
+    container_name: bd_tenant_frontend_base
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - bd_tenant_network
+
+volumes:
+  postgres_data_base:
+  backend_uploads_base:
+
+networks:
+  bd_tenant_network:
+    driver: bridge
+
