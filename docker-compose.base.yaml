@@ -9,9 +9,9 @@ services:
     image: postgres:15-alpine
     container_name: bd_tenant_db_base
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-bdtenant}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bdtenant2024secure}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data_base:/var/lib/postgresql/data
     healthcheck:
@@ -29,25 +29,25 @@ services:
       dockerfile: Dockerfile.base
     container_name: bd_tenant_backend_base
     environment:
-      # Database - Auto-configured
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bdtenant2024secure}
-      POSTGRES_DB: ${POSTGRES_DB:-bdtenant}
-      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
-      # Security - Auto-generated defaults
-      SECRET_KEY: ${SECRET_KEY:-bdtenant-secret-key-change-in-production-2024}
-      JWT_SECRET: ${JWT_SECRET:-bdtenant-jwt-secret-change-in-production-2024}
-      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
-      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
-      # CORS - Allow all by default
-      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      # Database - Backend will use defaults from config.py if not set
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      # Security - Backend has defaults, but set these in production
+      SECRET_KEY: ${SECRET_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS}
+      # CORS - Backend defaults to allow all
+      CORS_ORIGINS: ${CORS_ORIGINS}
       # Domain
-      BASE_DOMAIN: ${BASE_DOMAIN:-localhost}
-      ALLOWED_SUBDOMAINS: ${ALLOWED_SUBDOMAINS:-*}
+      BASE_DOMAIN: ${BASE_DOMAIN}
+      ALLOWED_SUBDOMAINS: ${ALLOWED_SUBDOMAINS}
       # Environment
-      ENVIRONMENT: ${ENVIRONMENT:-production}
-      DEBUG: ${DEBUG:-false}
+      ENVIRONMENT: ${ENVIRONMENT}
+      DEBUG: ${DEBUG}
     depends_on:
       postgres:
         condition: service_healthy
@@ -68,8 +68,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.base
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
-        VITE_BASE_DOMAIN: ${VITE_BASE_DOMAIN:-localhost}
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_BASE_DOMAIN: ${VITE_BASE_DOMAIN}
     container_name: bd_tenant_frontend_base
     depends_on:
       - backend
